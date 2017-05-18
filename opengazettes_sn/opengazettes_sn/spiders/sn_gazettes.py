@@ -3,7 +3,7 @@ import os
 import re
 from datetime import datetime
 
-from ..items import OpengazettesNgItem
+from ..items import OpengazettesSnItem
 
 
 class GazettesSpider(scrapy.Spider):
