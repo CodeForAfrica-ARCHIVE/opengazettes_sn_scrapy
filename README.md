@@ -1,0 +1,1 @@
+# Open Gazettes SN Scraper
