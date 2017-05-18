@@ -1,13 +1,14 @@
-import scrapy
+from datetime import datetime
 import os
 import re
-from datetime import datetime
+import scrapy
+from unidecode import unidecode
 
 from ..items import OpengazettesSnItem
 
 
 class GazettesSpider(scrapy.Spider):
-    name = "ng_gazettes"
+    name = "sn_gazettes"
     allowed_domains = ["www.jo.gouv.sn"]
 
     def start_requests(self):
@@ -40,11 +41,11 @@ class GazettesSpider(scrapy.Spider):
                 return response.xpath('//*[@id="explorei"]/ul[1]/li[{}]/font/a[@class="menu"]/@href'.format(year_num)).extract_first()
 
     def get_year_gazettes(self, response):
-        # initialize gazette_meta
-        gazette_meta = OpengazettesSnItem()
-
         articles = len(response.xpath('//*[@id="explorei"]/ul[1]/li').extract())
         for article in range(1, articles + 1):
+            # initialize gazette_meta
+            gazette_meta = OpengazettesSnItem()
+
             gazette_meta['gazette_name'] = response.xpath(
                 '//*[@id="explorei"]/ul[1]/li[{}]/font/a/text()'.format(article)).extract_first()
             gazette_meta['gazette_link'] = response.xpath(
@@ -71,10 +72,9 @@ class GazettesSpider(scrapy.Spider):
         gazette_name = gazette_meta['gazette_name']
 
         item = self.create_gazette_meta(gazette_meta, gazette_name)
-
         file_name = './gazettes/{}/{}/{}.html'.format(
             item['gazette_year'],
-            item['gazette_month'],
+            self.get_month_number(item['gazette_month']),
             item['filename']
         )
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
@@ -85,7 +85,9 @@ class GazettesSpider(scrapy.Spider):
         yield item
 
     def create_gazette_meta(self, gazette_meta, gazette_name):
-        gazette_name = self.process_gazette_name(gazette_name)
+        # remove french accents from words and lowercase them
+        gazette_name = unidecode(gazette_name.lower().replace('n - s', ''))
+        
         gazette_number, gazette_day, gazette_year = tuple(re.findall(r'\d+', gazette_name))
         gazette_month = re.findall(r'\b[A-Za-z]+\b', gazette_name)[-1]
 
@@ -93,7 +95,7 @@ class GazettesSpider(scrapy.Spider):
         gazette_meta['gazette_year'] = gazette_year
         gazette_meta['gazette_month'] = gazette_month
         gazette_meta['gazette_day'] = gazette_day
-        # gazette_meta['week_day'] = week_day
+
         gazette_title, gazette_file_name = self.create_gazette_name_title(gazette_meta)
 
         gazette_meta['gazette_title'] = gazette_title
@@ -101,22 +103,14 @@ class GazettesSpider(scrapy.Spider):
 
         return gazette_meta
 
-    def process_gazette_name(self, gazette_name):
-        gazette_name = gazette_name.lower()
-        import locale
-        locale.setlocale(locale.LC_ALL, 'fr_FR')
-
-        import calendar
-
-        months = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
-              'August', 'September', 'October', 'November', 'December']
-
-        # days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        for month in months:
-            m_index = months.index(month) + 1
-            if calendar.month_name[m_index].lower() in gazette_name:
-                gazette_name = gazette_name.replace(calendar.month_name[m_index], month)
-                return gazette_name
+    def get_month_number(self, month):
+        months_fr = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
+                     'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
+        p_month = unidecode(month.strip()).lower()
+        month_number = str(months_fr.index(p_month) + 1)
+        if len(month_number) == 1:
+            return '0' + month_number
+        return month_number
 
     def create_gazette_name_title(self, gazette_meta):
         filename = 'opengazettes-sn-no-{}-dated-{}-{}-{}'.format(
@@ -129,7 +123,7 @@ class GazettesSpider(scrapy.Spider):
         title = 'Senegal Government Gazette No.{} Dated {} {} {}'.format(
             gazette_meta['gazette_number'],
             gazette_meta['gazette_day'],
-            gazette_meta['gazette_month'],
+            gazette_meta['gazette_month'].capitalize(),
             gazette_meta['gazette_year']
         )
         return  filename, title
