@@ -41,7 +41,7 @@ class GazettesSpider(scrapy.Spider):
 
     def get_year_gazettes(self, response):
         # initialize gazette_meta
-        gazette_meta = OpengazettesNgItem()
+        gazette_meta = OpengazettesSnItem()
 
         articles = len(response.xpath('//*[@id="explorei"]/ul[1]/li').extract())
         for article in range(1, articles + 1):
