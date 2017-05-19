@@ -67,7 +67,8 @@ class GazettesSpider(scrapy.Spider):
             yield request
 
     def download_article(self, response):
-        articles = response.xpath('//*[@id="explorei"]/div[2]').extract()
+        article_contents = response.xpath('//*[@id="explorei"]/div[2]').extract()
+        article_title = response.xpath('//*[@id="explorei"]/b[2]/font/font/div/font/font/text()').extract()
         gazette_meta =  response.meta['gazette_meta']
         gazette_name = gazette_meta['gazette_name']
 
@@ -79,15 +80,18 @@ class GazettesSpider(scrapy.Spider):
         )
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, 'a') as file:
-            for article in articles:
+            file.write(article_title)
+            file.write('/n')
+            for article in article_contents:
                 file.write(article)
+            file.write('/n/n')
         print('file => {} has been written'.format(file_name))
         yield item
 
     def create_gazette_meta(self, gazette_meta, gazette_name):
         # remove french accents from words and lowercase them
         gazette_name = unidecode(gazette_name.lower().replace('n - s', ''))
-        
+
         gazette_number, gazette_day, gazette_year = tuple(re.findall(r'\d+', gazette_name))
         gazette_month = re.findall(r'\b[A-Za-z]+\b', gazette_name)[-1]
 
