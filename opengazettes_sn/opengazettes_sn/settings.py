@@ -13,7 +13,8 @@ BOT_NAME = 'opengazettes_sn'
 
 SPIDER_MODULES = ['opengazettes_sn.spiders']
 NEWSPIDER_MODULE = 'opengazettes_sn.spiders'
-
+FILES_STORE_S3_ACL = 'public-read'
+DELTAFETCH_ENABLED = True
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'opengazettes_sn (+http://www.opengazettes.sn)'
@@ -46,9 +47,9 @@ DOWNLOAD_DELAY = 3
 
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    'opengazettes_sn.middlewares.OpengazettesSnSpiderMiddleware': 543,
-#}
+SPIDER_MIDDLEWARES = {
+    'scrapy_deltafetch.DeltaFetch': True,
+}
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
@@ -61,6 +62,10 @@ DOWNLOAD_DELAY = 3
 #EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
+FEED_STORAGES = {
+    's3': 'opengazettes_sn.extensions.feedexport.S3FeedStorage'
+}
+
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html

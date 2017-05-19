@@ -1,4 +1,5 @@
 from datetime import datetime
+import errno
 import os
 import re
 import scrapy
@@ -25,7 +26,7 @@ class GazettesSpider(scrapy.Spider):
             year = datetime.now().strftime('%Y')
 
         # select list with all years
-        years_list = len(response.xpath('//*[@id="explorei"]/ul[1]/li').extract())
+        years_list = len(response.xpath('//*[@id="explorei"]/ul[1]/li').extract()) + 1
         year_link = self.get_year_link(response, years_list, year)
 
 
@@ -67,27 +68,35 @@ class GazettesSpider(scrapy.Spider):
             yield request
 
     def download_article(self, response):
-        articles = response.xpath('//*[@id="explorei"]/div[2]').extract()
+        article_contents = response.xpath('//*[@id="explorei"]/div[2]').extract()
         gazette_meta =  response.meta['gazette_meta']
         gazette_name = gazette_meta['gazette_name']
 
         item = self.create_gazette_meta(gazette_meta, gazette_name)
-        file_name = './gazettes/{}/{}/{}.html'.format(
+        file_name = '{}/{}/{}.html'.format(
             item['gazette_year'],
             self.get_month_number(item['gazette_month']),
             item['filename']
         )
-        os.makedirs(os.path.dirname(file_name), exist_ok=True)
+
+        if not os.path.exists(os.path.dirname(file_name)):
+            try:
+                os.makedirs(os.path.dirname(file_name))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
         with open(file_name, 'a') as file:
-            for article in articles:
-                file.write(article)
+            for article in article_contents:
+                file.write(article.encode('ascii', 'ignore'))
+            file.write('\n\n')
         print('file => {} has been written'.format(file_name))
         yield item
 
     def create_gazette_meta(self, gazette_meta, gazette_name):
         # remove french accents from words and lowercase them
         gazette_name = unidecode(gazette_name.lower().replace('n - s', ''))
-        
+
         gazette_number, gazette_day, gazette_year = tuple(re.findall(r'\d+', gazette_name))
         gazette_month = re.findall(r'\b[A-Za-z]+\b', gazette_name)[-1]
 
@@ -96,7 +105,7 @@ class GazettesSpider(scrapy.Spider):
         gazette_meta['gazette_month'] = gazette_month
         gazette_meta['gazette_day'] = gazette_day
 
-        gazette_title, gazette_file_name = self.create_gazette_name_title(gazette_meta)
+        gazette_file_name, gazette_title = self.create_gazette_name_title(gazette_meta)
 
         gazette_meta['gazette_title'] = gazette_title
         gazette_meta['filename'] = gazette_file_name
