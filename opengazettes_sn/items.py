@@ -13,8 +13,8 @@ class OpengazettesSnItem(scrapy.Item):
     gazette_link = scrapy.Field() # link to the gazette on http://www.jo.gouv.sn/spip.php
     publication_date = scrapy.Field() # date the gazette is published
     gazette_number = scrapy.Field()
-    file_path = scrapy.Field() # path to the file
-    files = scrapy.Field() # I am not sure what this is
+    file_urls = scrapy.Field() # path to the file
+    gazette_links = scrapy.Field() # I am not sure what this is
     filename = scrapy.Field() # the new filename
     gazette_title = scrapy.Field() # title of the gazette
     gazette_day = scrapy.Field()

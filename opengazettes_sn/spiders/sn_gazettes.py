@@ -26,7 +26,9 @@ class GazettesSpider(scrapy.Spider):
             year = datetime.now().strftime('%Y')
 
         # select list with all years
-        years_list = len(response.xpath('//*[@id="explorei"]/ul[1]/li').extract()) + 1
+        years_list = len(response.xpath(
+            '//*[@id="explorei"]/ul[1]/li').extract()) + 1
+
         year_link = self.get_year_link(response, years_list, year)
 
 
@@ -37,67 +39,60 @@ class GazettesSpider(scrapy.Spider):
 
     def get_year_link(self, response, years_list, year):
         for year_num in range(1, years_list):
-            got_year = response.xpath('//*[@id="explorei"]/ul[1]/li[{}]/font/a/text()'.format(year_num)).extract_first()
+            got_year = response.xpath(
+                '//*[@id="explorei"]/ul[1]/li[{}]/font/a/text()'
+                    .format(year_num)).extract_first()
             if got_year == year:
-                return response.xpath('//*[@id="explorei"]/ul[1]/li[{}]/font/a[@class="menu"]/@href'.format(year_num)).extract_first()
+                return response.xpath('//*[@id="explorei"]/ul[1]/li[{}]/\
+                font/a[@class="menu"]/@href'.format(year_num)).extract_first()
 
     def get_year_gazettes(self, response):
-        articles = len(response.xpath('//*[@id="explorei"]/ul[1]/li').extract())
+        articles = len(response.xpath(
+            '//*[@id="explorei"]/ul[1]/li').extract())
+
         for article in range(1, articles + 1):
             # initialize gazette_meta
             gazette_meta = OpengazettesSnItem()
 
             gazette_meta['gazette_name'] = response.xpath(
-                '//*[@id="explorei"]/ul[1]/li[{}]/font/a/text()'.format(article)).extract_first()
+                '//*[@id="explorei"]/ul[1]/li[{}]/font/a/text()'
+                    .format(article)).extract_first()
+
             gazette_meta['gazette_link'] = response.xpath(
-                '//*[@id="explorei"]/ul[1]/li[{}]/font/a[@class="menu"]/@href'.format(article)).extract_first()
+                '//*[@id="explorei"]/ul[1]/li[{}]/font/a[@class="menu"]/\
+                @href'.format(article)).extract_first()
+
+            item = self.create_gazette_meta(gazette_meta,
+                                            gazette_meta['gazette_name'])
             url = 'http://www.jo.gouv.sn/' + gazette_meta['gazette_link']
             request = scrapy.Request(url, self.get_gazette_article_links)
-            request.meta['gazette_meta'] = gazette_meta
-            yield request
-
-    def get_gazette_article_links(self, response):
-        article_links = len(response.xpath('//*[@id="explorei"]/ul/li').extract())
-        item = response.meta['gazette_meta']
-        for article_link in range(1, article_links + 1):
-            link = response.xpath(
-                '//*[@id="explorei"]/ul/li[{}]/a[@class="menu"]/@href'.format(article_link)).extract_first()
-            url = 'http://www.jo.gouv.sn/' + link
-            request = scrapy.Request(url, callback=self.download_article)
             request.meta['gazette_meta'] = item
             yield request
 
-    def download_article(self, response):
-        article_contents = response.xpath('//*[@id="explorei"]/div[2]').extract()
-        gazette_meta =  response.meta['gazette_meta']
-        gazette_name = gazette_meta['gazette_name']
+    def get_gazette_article_links(self, response):
+        article_links = len(response.xpath(
+            '//*[@id="explorei"]/ul/li').extract())
 
-        item = self.create_gazette_meta(gazette_meta, gazette_name)
-        file_name = '{}/{}/{}.html'.format(
-            item['gazette_year'],
-            self.get_month_number(item['gazette_month']),
-            item['filename']
-        )
+        item = response.meta['gazette_meta']
+        gazette_links = []
+        for article_link in range(1, article_links + 1):
+            link = response.xpath(
+                '//*[@id="explorei"]/ul/li[{}]/a[@class="menu"]/@href'
+                    .format(article_link)).extract_first()
+            url = 'http://www.jo.gouv.sn/' + link
+            gazette_links.append(url)
+        item['file_urls'] = gazette_links
 
-        if not os.path.exists(os.path.dirname(file_name)):
-            try:
-                os.makedirs(os.path.dirname(file_name))
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-
-        with open(file_name, 'a') as file:
-            for article in article_contents:
-                file.write(article.encode('ascii', 'ignore'))
-            file.write('\n\n')
-        print('file => {} has been written'.format(file_name))
         yield item
 
     def create_gazette_meta(self, gazette_meta, gazette_name):
         # remove french accents from words and lowercase them
-        gazette_name = unidecode(gazette_name.lower().replace('n - s', ''))
+        gazette_name = unidecode(
+            gazette_name.lower().replace('n - s', ''))
 
-        gazette_number, gazette_day, gazette_year = tuple(re.findall(r'\d+', gazette_name))
+        gazette_number, gazette_day, gazette_year = tuple(
+            re.findall(r'\d+', gazette_name))
+
         gazette_month = re.findall(r'\b[A-Za-z]+\b', gazette_name)[-1]
 
         gazette_meta['gazette_number'] = gazette_number
@@ -105,7 +100,8 @@ class GazettesSpider(scrapy.Spider):
         gazette_meta['gazette_month'] = gazette_month
         gazette_meta['gazette_day'] = gazette_day
 
-        gazette_file_name, gazette_title = self.create_gazette_name_title(gazette_meta)
+        gazette_file_name, gazette_title = (
+            self.create_gazette_name_title(gazette_meta))
 
         gazette_meta['gazette_title'] = gazette_title
         gazette_meta['filename'] = gazette_file_name
@@ -113,8 +109,9 @@ class GazettesSpider(scrapy.Spider):
         return gazette_meta
 
     def get_month_number(self, month):
-        months_fr = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
-                     'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre']
+        months_fr = ['janvier', 'fevrier', 'mars', 'avril',
+                     'mai', 'juin','juillet', 'aout',
+                     'septembre', 'octobre', 'novembre', 'decembre']
         p_month = unidecode(month.strip()).lower()
         month_number = str(months_fr.index(p_month) + 1)
         if len(month_number) == 1:

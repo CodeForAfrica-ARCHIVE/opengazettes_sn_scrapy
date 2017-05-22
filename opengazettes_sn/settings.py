@@ -14,7 +14,7 @@ BOT_NAME = 'opengazettes_sn'
 SPIDER_MODULES = ['opengazettes_sn.spiders']
 NEWSPIDER_MODULE = 'opengazettes_sn.spiders'
 FILES_STORE_S3_ACL = 'public-read'
-DELTAFETCH_ENABLED = True
+DELTAFETCH_ENABLED = False
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'opengazettes_sn (+http://www.opengazettes.sn)'
@@ -69,9 +69,9 @@ FEED_STORAGES = {
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'opengazettes_sn.pipelines.OpengazettesSnPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'opengazettes_sn.pipelines.OpengazettesSnPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
