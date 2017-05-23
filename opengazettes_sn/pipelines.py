@@ -125,6 +125,11 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
             return checksum
         return None
 
+    def item_completed(self, results, item, info):
+        if isinstance(item, dict) or self.files_result_field in item.fields:
+            item[self.files_result_field] = [x for ok, x in results if (ok and x['checksum'])]
+        return item
+
     def modify_response(self, response):
         article_contents = response.xpath('//*[@id="explorei"]/div[2]').extract()
         content = ''
