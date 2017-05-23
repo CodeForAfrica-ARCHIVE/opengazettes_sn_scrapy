@@ -6,6 +6,7 @@ from scrapy.pipelines.files import FilesPipeline
 from scrapy.pipelines.files import FileException
 from scrapy.utils.misc import md5sum
 
+from unidecode import unidecode
 try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
@@ -141,5 +142,3 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
         if len(month_number) == 1:
             return '0' + month_number
         return month_number
-
-

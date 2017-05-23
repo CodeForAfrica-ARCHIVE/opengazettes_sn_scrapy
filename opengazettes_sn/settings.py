@@ -70,7 +70,7 @@ FEED_STORAGES = {
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'opengazettes_sn.pipelines.OpengazettesSnFilesPipeline': 900,
+   'opengazettes_sn.pipelines.OpengazettesSnFilesPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
