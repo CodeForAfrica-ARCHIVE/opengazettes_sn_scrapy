@@ -104,7 +104,7 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
         media_ext = '.html'
         return '%s/%s/%s%s' % \
             (request.meta['gazette_year'],
-                request.meta['gazette_month'],
+                self.get_month_number(request.meta['gazette_month']),
                 filename, media_ext)
 
     def file_downloaded(self, response, request, info):
@@ -131,5 +131,15 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
             content += article_content + '\n'
 
         return content
+
+    def get_month_number(self, month):
+        months_fr = ['janvier', 'fevrier', 'mars', 'avril',
+                     'mai', 'juin','juillet', 'aout',
+                     'septembre', 'octobre', 'novembre', 'decembre']
+        p_month = unidecode(month.strip()).lower()
+        month_number = str(months_fr.index(p_month) + 1)
+        if len(month_number) == 1:
+            return '0' + month_number
+        return month_number
 
 
