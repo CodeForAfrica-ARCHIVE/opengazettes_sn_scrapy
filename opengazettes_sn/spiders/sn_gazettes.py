@@ -87,8 +87,10 @@ class GazettesSpider(scrapy.Spider):
 
     def create_gazette_meta(self, gazette_meta, gazette_name):
         # remove french accents from words and lowercase them
-        gazette_name = unidecode(
-            gazette_name.lower().replace('n - s', ''))
+        gazette_name = unidecode(gazette_name.lower())
+
+        gazette_name, gazette_meta = self.check_special(
+                                    gazette_name, gazette_meta)
 
         gazette_number, gazette_day, gazette_year = tuple(
             re.findall(r'\d+', gazette_name))
@@ -113,7 +115,12 @@ class GazettesSpider(scrapy.Spider):
                      'mai', 'juin','juillet', 'aout',
                      'septembre', 'octobre', 'novembre', 'decembre']
         p_month = unidecode(month.strip()).lower()
-        month_number = str(months_fr.index(p_month) + 1)
+        for month in months_fr:
+            # sometimes the month name on http://www.jo.gouv.sn/spip.php
+            # are misspelt, hence the startswith check
+            if month == p_month or month.startswith(p_month[:4]):
+                month_number = str(months_fr.index(month) + 1)
+
         if len(month_number) == 1:
             return '0' + month_number
         return month_number
@@ -133,3 +140,16 @@ class GazettesSpider(scrapy.Spider):
             gazette_meta['gazette_year']
         )
         return  filename, title
+
+    def check_special(self, gazette_name, gazette_meta):
+        special_chars = ['- 2', 'n - s', 'ns']
+        for special_char in special_chars:
+            if special_char in gazette_name:
+                gazette_meta['special_issue'] = True
+                gazette_name.replace(special_char, '')
+        if 'special' in gazette_name:
+            gazette_meta['special_issue'] = True
+        return gazette_name, gazette_meta
+
+
+

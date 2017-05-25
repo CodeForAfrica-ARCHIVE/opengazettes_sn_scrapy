@@ -14,6 +14,7 @@ class OpengazettesSnItem(scrapy.Item):
     publication_date = scrapy.Field()
     gazette_number = scrapy.Field()
     files = scrapy.Field()
+    special_issue = scrapy.Field()
     file_urls = scrapy.Field()
     gazette_links = scrapy.Field()
     filename = scrapy.Field()

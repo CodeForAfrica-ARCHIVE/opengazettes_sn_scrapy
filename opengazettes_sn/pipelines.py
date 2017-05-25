@@ -117,7 +117,7 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
             for item in self.loop:
                 cont += item + '\n'
 
-            buf = BytesIO(cont.encode('ascii', 'ignore'))
+            buf = BytesIO(cont.encode('utf-8', 'replace'))
             checksum = md5sum(buf)
             buf.seek(0)
             self.store.persist_file(path, buf, info)
@@ -143,7 +143,12 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
                      'mai', 'juin','juillet', 'aout',
                      'septembre', 'octobre', 'novembre', 'decembre']
         p_month = unidecode(month.strip()).lower()
-        month_number = str(months_fr.index(p_month) + 1)
+        for month in months_fr:
+            # sometimes the month name on http://www.jo.gouv.sn/spip.php
+            # are misspelt, hence the startswith check
+            if month == p_month or month.startswith(p_month[:4]):
+                month_number = str(months_fr.index(month) + 1)
+
         if len(month_number) == 1:
             return '0' + month_number
         return month_number
