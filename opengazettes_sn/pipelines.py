@@ -116,8 +116,8 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
             cont = ''
             for item in self.loop:
                 cont += item + '\n'
-
-            buf = BytesIO(cont.encode('utf-8', 'replace'))
+            print([cont])
+            buf = BytesIO(cont.encode())
             checksum = md5sum(buf)
             buf.seek(0)
             self.store.persist_file(path, buf, info)
@@ -135,7 +135,6 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
         content = ''
         for article_content in article_contents:
             content += article_content + '\n'
-
         return content
 
     def get_month_number(self, month):
