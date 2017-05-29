@@ -116,7 +116,6 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
             cont = ''
             for item in self.loop:
                 cont += item + '\n'
-            print([cont])
             buf = BytesIO(cont.encode())
             checksum = md5sum(buf)
             buf.seek(0)
