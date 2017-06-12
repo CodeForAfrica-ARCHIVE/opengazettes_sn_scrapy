@@ -154,6 +154,14 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
         return month_number
 
     def convert_to_pdf(self, html_cont):
+        css = '''
+        table,
+        tr,
+        th,
+        td {
+            display:block
+        }
+        '''
         options = {
             'encoding': "UTF-8",
             'no-outline': None,

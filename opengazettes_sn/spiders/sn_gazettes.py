@@ -130,7 +130,7 @@ class GazettesSpider(scrapy.Spider):
         return month_number
 
     def create_gazette_name_title(self, gazette_meta):
-        if gazette_meta['special_issue']:
+        if gazette_meta['special_issue'] == True:
             gazette_no = str(gazette_meta['gazette_number']) + ' Special'
         else: gazette_no = gazette_meta['gazette_number']
 
@@ -151,14 +151,13 @@ class GazettesSpider(scrapy.Spider):
 
     def check_special(self, gazette_name, gazette_meta):
         gazette_meta['special_issue'] = False
-
-        if '- 2' or 'n - s' or 'ns' in gazette_name:
-            gazette_name = gazette_name.replace('- 2', '')\
-                .replace('n - s', '')\
-                .replace('ns', '')
-            gazette_meta['special_issue'] = True
-        if 'special' in gazette_name:
-            gazette_meta['special_issue'] = True
+        special_chars = ['- 2', 'n - s', 'ns' ]
+        for char in special_chars:
+            if char in gazette_name:
+                gazette_name = gazette_name.replace(char, '')
+                gazette_meta['special_issue'] = True
+            if 'special' in gazette_name:
+                gazette_meta['special_issue'] = True
         return gazette_name, gazette_meta
 
     def cache_filename(self, filename):
