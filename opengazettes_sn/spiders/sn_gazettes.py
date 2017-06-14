@@ -13,6 +13,9 @@ class GazettesSpider(scrapy.Spider):
     allowed_domains = ["www.jo.gouv.sn"]
 
     def start_requests(self):
+        # trying to catch filename for special Gazettes with no gazette dates
+        self.cached_file_name = ''
+
         url = 'http://www.jo.gouv.sn/spip.php?rubrique2'
         yield scrapy.Request(url, callback=self.parse)
 
@@ -50,7 +53,7 @@ class GazettesSpider(scrapy.Spider):
         articles = len(response.xpath(
             '//*[@id="explorei"]/ul[1]/li').extract())
 
-        for article in range(1, articles + 1):
+        for article in range(articles, 0, -1):
             # initialize gazette_meta
             gazette_meta = OpengazettesSnItem()
 
@@ -91,6 +94,7 @@ class GazettesSpider(scrapy.Spider):
 
         gazette_name, gazette_meta = self.check_special(
                                     gazette_name, gazette_meta)
+        gazette_name = self.cache_filename(gazette_name)
 
         gazette_number, gazette_day, gazette_year = tuple(
             re.findall(r'\d+', gazette_name))
@@ -126,15 +130,19 @@ class GazettesSpider(scrapy.Spider):
         return month_number
 
     def create_gazette_name_title(self, gazette_meta):
+        if gazette_meta['special_issue'] == True:
+            gazette_no = str(gazette_meta['gazette_number']) + ' Special'
+        else: gazette_no = gazette_meta['gazette_number']
+
         filename = 'opengazettes-sn-no-{}-dated-{}-{}-{}'.format(
-            gazette_meta['gazette_number'],
+            gazette_no.lower(),
             gazette_meta['gazette_day'],
             gazette_meta['gazette_month'],
             gazette_meta['gazette_year']
         )
 
         title = 'Senegal Government Gazette No.{} Dated {} {} {}'.format(
-            gazette_meta['gazette_number'],
+            gazette_no,
             gazette_meta['gazette_day'],
             gazette_meta['gazette_month'].capitalize(),
             gazette_meta['gazette_year']
@@ -142,14 +150,21 @@ class GazettesSpider(scrapy.Spider):
         return  filename, title
 
     def check_special(self, gazette_name, gazette_meta):
-        special_chars = ['- 2', 'n - s', 'ns']
-        for special_char in special_chars:
-            if special_char in gazette_name:
+        gazette_meta['special_issue'] = False
+        special_chars = ['- 2', 'n - s', 'ns' ]
+        for char in special_chars:
+            if char in gazette_name:
+                gazette_name = gazette_name.replace(char, '')
                 gazette_meta['special_issue'] = True
-                gazette_name.replace(special_char, '')
-        if 'special' in gazette_name:
-            gazette_meta['special_issue'] = True
+            if 'special' in gazette_name:
+                gazette_meta['special_issue'] = True
         return gazette_name, gazette_meta
 
+    def cache_filename(self, filename):
+        if len (filename.split()) < 4:
+            filename = self.cached_file_name
+        else:
+            self.cached_file_name = filename
+        return  filename
 
 
