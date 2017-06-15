@@ -20,7 +20,6 @@ lxml==3.7.3
 olefile==0.44
 packaging==16.8
 parsel==1.1.0
-pdfkit==0.6.1
 Pillow==4.1.1
 pyasn1==0.2.3
 pyasn1-modules==0.0.8
@@ -47,5 +46,4 @@ urllib3==1.21.1
 w3lib==1.17.0
 webencodings==0.5.1
 websocket-client==0.40.0
-xhtml2pdf==0.2b1
 zope.interface==4.4.1
