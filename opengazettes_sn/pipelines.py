@@ -104,7 +104,7 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
 
         # Now using file name passed in the meta data
         filename = request.meta['filename']
-        media_ext = '.pdf'
+        media_ext = '.html'
         return '%s/%s/%s%s' % \
             (request.meta['gazette_year'],
                 self.get_month_number(request.meta['gazette_month']),
@@ -118,7 +118,7 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
             cont = ''
             for item in self.loop:
                 cont += item + '\n'
-            buf = BytesIO(self.convert_to_pdf(cont.encode('utf-8')))
+            buf = BytesIO(cont.encode())
             checksum = md5sum(buf)
             buf.seek(0)
             self.store.persist_file(path, buf, info)
@@ -133,7 +133,7 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
 
     def modify_response(self, response):
         article_contents = response.xpath('//*[@id="explorei"]/div[2]').extract()
-        content = ''
+        content = '<meta charset="utf-8"> \n'
         for article_content in article_contents:
             content += article_content + '\n'
         return content
