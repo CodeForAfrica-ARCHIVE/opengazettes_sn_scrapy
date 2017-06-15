@@ -5,9 +5,8 @@ from scrapy.utils.request import referer_str
 from scrapy.pipelines.files import FilesPipeline
 from scrapy.pipelines.files import FileException
 from scrapy.utils.misc import md5sum
-import pdfkit
+
 from unidecode import unidecode
-from xhtml2pdf import pisa
 
 try:
     from cStringIO import StringIO as BytesIO
@@ -152,32 +151,3 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
         if len(month_number) == 1:
             return '0' + month_number
         return month_number
-
-    def convert_to_pdf(self, html_cont):
-        css = '''
-        table,
-        tr,
-        th,
-        td {
-            display:block
-        }
-        '''
-        options = {
-            'encoding': "UTF-8",
-            'no-outline': None,
-            'no-images': None,
-            'disable-forms': None,
-            'load-error-handling': None,
-            'quiet': True
-            }
-        output = BytesIO()
-        pdf = pisa.CreatePDF(
-            BytesIO(html_cont),
-            output,
-            context_meta=options
-        )
-
-        if pdf.err:
-            dumpErrors(pdf)
-        else:
-            return output.getvalue()
