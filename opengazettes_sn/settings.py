@@ -17,10 +17,10 @@ FILES_STORE_S3_ACL = 'public-read'
 DELTAFETCH_ENABLED = False
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'opengazettes_sn (+http://www.opengazettes.sn)'
+USER_AGENT = 'opengazettes (+https://opengazettes.co)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -62,8 +62,9 @@ SPIDER_MIDDLEWARES = {
 #EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
+
 FEED_STORAGES = {
-    's3': 'opengazettes_sn.extensions.feedexport.S3FeedStorage'
+    's3': 'opengazettes_sn.extensions.feedexport.S3FeedStorage',
 }
 
 
