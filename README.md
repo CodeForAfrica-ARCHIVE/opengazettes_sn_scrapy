@@ -10,6 +10,12 @@
     - `SCRAPY_FEED_URI=s3://name-of-bucket-here/gazettes/data.jsonlines` - Where you want the `jsonlines` output for crawls to be saved. This can also be a local location
     - `SCRAPY_FILES_STORE=s3://name-of-bucket-here/gazettes` - Where you want scraped gazettes to be stored. This can also be a local location
 
+## Running it Locally
+- To run the spider locally, you can choose to store the scraped files locally to do this set the variable
+- `SCRAPY_FILES_STORE=/directory/to/store/the/files` which should point to a local folder
+- Then run the command  `scrapy crawl sn_gazettes -a year=2016 -o sn_gazettes.jsonlines`          
+   where year is the year you want to scrape gazettes from
+- `sn_gazettes.jsonlines` is the file where crawls are saved, this too can be a directory
 
 ## Deploying to [Scraping Hub](https://scrapinghub.com)
 
