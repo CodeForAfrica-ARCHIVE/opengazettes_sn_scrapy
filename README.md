@@ -11,7 +11,7 @@
     - `SCRAPY_FILES_STORE=s3://name-of-bucket-here/gazettes` - Where you want scraped gazettes to be stored. This can also be a local location
 
 ## Running it Locally
-- To run the spider locally, you can choose to store the scraped files locally to do this set the variable
+- To run the spider locally, you can choose to store the scraped files locally to do this set the  ENV variable
 - `SCRAPY_FILES_STORE=/directory/to/store/the/files` which should point to a local folder
 - Then run the command  `scrapy crawl sn_gazettes -a year=2016 -o sn_gazettes.jsonlines`          
    where year is the year you want to scrape gazettes from
@@ -25,8 +25,8 @@ It is recommended that you deploy your crawler to scrapinghub for easy managemen
 - Install shub locally using `pip install shub`. Further instructions [here](https://shub.readthedocs.io/en/stable/quickstart.html#installation)
 - `shub login`
 - `shub deploy`
-
-Note that on scraping hub, environment variables don't need the `SCRAPY_` prefix
+- Login to scrapinghub and set up the above ENV variables
+Note that on scraping hub, environment variables should not have `SCRAPY_` prefix
 
 ## Installing scrapy-deltafetch on MacOS
 - `brew install berkeley-db`
