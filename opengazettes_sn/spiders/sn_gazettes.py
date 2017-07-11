@@ -1,6 +1,4 @@
 from datetime import datetime
-import errno
-import os
 import re
 import scrapy
 from unidecode import unidecode
@@ -111,6 +109,11 @@ class GazettesSpider(scrapy.Spider):
 
         gazette_meta['gazette_title'] = gazette_title
         gazette_meta['filename'] = gazette_file_name
+        date_str = ' '.join([gazette_day, self.get_month_number(gazette_month),
+                             gazette_year])
+        gazette_meta['publication_date'] = datetime.strptime(
+                    date_str, '%d %m %Y')
+
 
         return gazette_meta
 
