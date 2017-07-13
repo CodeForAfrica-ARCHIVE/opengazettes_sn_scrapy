@@ -59,13 +59,17 @@ class GazettesSpider(scrapy.Spider):
                 '//*[@id="explorei"]/ul[1]/li[{}]/font/a/text()'
                     .format(article)).extract_first()
 
-            gazette_meta['gazette_link'] = response.xpath(
+            gazette_link = response.xpath(
                 '//*[@id="explorei"]/ul[1]/li[{}]/font/a[@class="menu"]/\
                 @href'.format(article)).extract_first()
 
             item = self.create_gazette_meta(gazette_meta,
                                             gazette_meta['gazette_name'])
-            url = 'http://www.jo.gouv.sn/' + gazette_meta['gazette_link']
+
+            gazette_meta['gazette_link'] = 'http://www.jo.gouv.sn/' + \
+                                           gazette_link
+
+            url = gazette_meta['gazette_link']
             request = scrapy.Request(url, self.get_gazette_article_links)
             request.meta['gazette_meta'] = item
             yield request
@@ -99,21 +103,13 @@ class GazettesSpider(scrapy.Spider):
 
         gazette_month = re.findall(r'\b[A-Za-z]+\b', gazette_name)[-1]
 
-        gazette_meta['gazette_number'] = gazette_number
-        gazette_meta['gazette_year'] = gazette_year
-        gazette_meta['gazette_month'] = gazette_month
-        gazette_meta['gazette_day'] = gazette_day
-
-        gazette_file_name, gazette_title = (
-            self.create_gazette_name_title(gazette_meta))
-
-        gazette_meta['gazette_title'] = gazette_title
-        gazette_meta['filename'] = gazette_file_name
         date_str = ' '.join([gazette_day, self.get_month_number(gazette_month),
                              gazette_year])
         gazette_meta['publication_date'] = datetime.strptime(
                     date_str, '%d %m %Y')
-
+        gazette_meta['gazette_number'] = gazette_number
+        gazette_meta = self.create_gazette_name_title(gazette_meta,
+                                                      gazette_month)
 
         return gazette_meta
 
@@ -132,25 +128,27 @@ class GazettesSpider(scrapy.Spider):
             return '0' + month_number
         return month_number
 
-    def create_gazette_name_title(self, gazette_meta):
+    def create_gazette_name_title(self, gazette_meta, gazette_month):
         if gazette_meta['special_issue'] == True:
             gazette_no = str(gazette_meta['gazette_number']) + ' Special'
         else: gazette_no = gazette_meta['gazette_number']
 
         filename = 'opengazettes-sn-no-{}-dated-{}-{}-{}'.format(
             gazette_no.lower(),
-            gazette_meta['gazette_day'],
-            gazette_meta['gazette_month'],
-            gazette_meta['gazette_year']
+            gazette_meta['publication_date'].day,
+            gazette_month,
+            gazette_meta['publication_date'].year
         )
 
         title = 'Senegal Government Gazette No.{} Dated {} {} {}'.format(
             gazette_no,
-            gazette_meta['gazette_day'],
-            gazette_meta['gazette_month'].capitalize(),
-            gazette_meta['gazette_year']
+            gazette_meta['publication_date'].day,
+            gazette_month.capitalize(),
+            gazette_meta['publication_date'].year
         )
-        return  filename, title
+        gazette_meta['gazette_title'] = title
+        gazette_meta['filename'] = filename
+        return gazette_meta
 
     def check_special(self, gazette_name, gazette_meta):
         gazette_meta['special_issue'] = False

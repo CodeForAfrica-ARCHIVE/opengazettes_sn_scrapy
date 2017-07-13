@@ -75,7 +75,7 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
 
     def get_media_requests(self, item, info):
         return [Request(x, meta={'filename': item["filename"],
-                'gazette_year': item['gazette_year'], 'gazette_month': item['gazette_month'],
+                                 'publication_date': item['publication_date'],
                                  'file_urls_len': len(item['file_urls'])})
                 for x in item.get(self.files_urls_field, [])]
 
@@ -103,10 +103,12 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
 
         # Now using file name passed in the meta data
         filename = request.meta['filename']
+
+        month = self.get_month_number(
+            str(request.meta['publication_date'].month))
         media_ext = '.html'
         return '%s/%s/%s%s' % \
-            (request.meta['gazette_year'],
-                self.get_month_number(request.meta['gazette_month']),
+            (request.meta['publication_date'].year, month,
                 filename, media_ext)
 
     def file_downloaded(self, response, request, info):
@@ -120,14 +122,18 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
             buf = BytesIO(cont.encode())
             checksum = md5sum(buf)
             buf.seek(0)
-            self.store.persist_file(path, buf, info)
+            self.store.persist_file(path, buf, info, meta={'Content-Type': 'text/html'})
             self.loop = []
             return checksum
         return None
 
     def item_completed(self, results, item, info):
         if isinstance(item, dict) or self.files_result_field in item.fields:
-            item[self.files_result_field] = [x for ok, x in results if (ok and x['checksum'])]
+            try:
+                file = [x for ok, x in results if (ok and x['checksum'])][0]
+            except IndexError as e:
+                raise e # exits the job if the item has no files
+            item[self.files_result_field] = file
         return item
 
     def modify_response(self, response):
@@ -138,16 +144,6 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
         return content
 
     def get_month_number(self, month):
-        months_fr = ['janvier', 'fevrier', 'mars', 'avril',
-                     'mai', 'juin','juillet', 'aout',
-                     'septembre', 'octobre', 'novembre', 'decembre']
-        p_month = unidecode(month.strip()).lower()
-        for month in months_fr:
-            # sometimes the month name on http://www.jo.gouv.sn/spip.php
-            # are misspelt, hence the startswith check
-            if month == p_month or month.startswith(p_month[:4]):
-                month_number = str(months_fr.index(month) + 1)
-
-        if len(month_number) == 1:
-            return '0' + month_number
-        return month_number
+        if len(month) == 1:
+            return '0' + month
+        return month
