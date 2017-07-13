@@ -130,10 +130,10 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
     def item_completed(self, results, item, info):
         if isinstance(item, dict) or self.files_result_field in item.fields:
             try:
-                file = [x for ok, x in results if (ok and x['checksum'])][0]
+                file = [x for ok, x in results if (ok and x['checksum'])][-1]
             except IndexError as e:
                 raise e # exits the job if the item has no files
-            item[self.files_result_field] = file
+            item[self.files_result_field] = [file]
         return item
 
     def modify_response(self, response):
