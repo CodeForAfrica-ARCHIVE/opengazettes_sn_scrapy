@@ -14,7 +14,7 @@ BOT_NAME = 'opengazettes_sn'
 SPIDER_MODULES = ['opengazettes_sn.spiders']
 NEWSPIDER_MODULE = 'opengazettes_sn.spiders'
 FILES_STORE_S3_ACL = 'public-read'
-DELTAFETCH_ENABLED = False
+DELTAFETCH_ENABLED = True
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'opengazettes_sn (+http://senegal.opengazettes.co)' Fake USER_AGENT installed
