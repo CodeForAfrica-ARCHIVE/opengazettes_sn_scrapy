@@ -45,11 +45,12 @@ class S3FeedStorage(BlockingFeedStorage):
 
             self.s3_client.put_object(
                 Bucket=self.bucketname, Key=self.keyname, Body=new_file,
-                ACL=self.policy, ContentType='text/html')
+                ACL=self.policy)
         else:
             conn = self.connect_s3(self.access_key, self.secret_key)
             bucket = conn.get_bucket(self.bucketname, validate=False)
             key = bucket.new_key(self.keyname)
             key.set_contents_from_file(file)
             bucket.set_acl(self.policy, key)
+            key.content_type = 'text/html'
             key.close()
