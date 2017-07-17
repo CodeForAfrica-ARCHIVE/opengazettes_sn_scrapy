@@ -51,6 +51,6 @@ class S3FeedStorage(BlockingFeedStorage):
             bucket = conn.get_bucket(self.bucketname, validate=False)
             key = bucket.new_key(self.keyname)
             key.set_contents_from_file(file)
-            bucket.set_acl(self.policy, key)
             key.content_type = 'text/html'
+            bucket.set_acl(self.policy, key)
             key.close()
