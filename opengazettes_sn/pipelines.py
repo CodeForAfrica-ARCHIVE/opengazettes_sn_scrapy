@@ -122,7 +122,7 @@ class OpengazettesSnFilesPipeline(FilesPipeline):
             buf = BytesIO(cont.encode())
             checksum = md5sum(buf)
             buf.seek(0)
-            self.store.persist_file(path, buf, info, meta={'Content-Type': 'text/html'})
+            self.store.persist_file(path, buf, info, meta={'Content-Type': 'text/html'}, headers={'Content-Type': 'text/html'})
             self.loop = []
             return checksum
         return None
